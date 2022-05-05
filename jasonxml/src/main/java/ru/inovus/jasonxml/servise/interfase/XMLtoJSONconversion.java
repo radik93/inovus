@@ -11,10 +11,12 @@ import java.io.IOException;
  * @version 1.0
  */
 public interface XMLtoJSONconversion {
-       public void convertFileXMLtoJSON(MultipartFile multipartFile) throws ParserConfigurationException, SAXException, IOException;
+
        /*
         * Метод принимает загруженый файл и порциями считывает его конвертирует
         * @author radik
         * @version 1.0
         */
+       void convertFileXMLtoJSON(MultipartFile multipartFile) throws ParserConfigurationException, SAXException, IOException;
+
 }

@@ -2,15 +2,25 @@
 <html xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
    <script scr="jquery-3.2.1.js"></script>
-    <title>t</title>
+    <title>job-test</title>
+    <style>
+        span  {
+            white-space: pre;
+        }
+    </style>
 </head>
 <body>
 <form method="POST" enctype="multipart/form-data"
-      action="/upload">
+      action="/job-test/upload">
     File to upload: <input type="file" name="file">
     <br /> <input type="submit" value="Upload"> Press here to upload the file!
 </form>
 
-<p  th:text="${model.outText}">VALUE</p>
+<!-- <div  th:text="${model.outText}">VALUE-->
+
+<div th:each="line : ${model.lines}">
+    <span th:text="${line}">line</span>
+</div>
+
 </body>
 </html>

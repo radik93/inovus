@@ -12,10 +12,11 @@ import ru.inovus.jasonxml.utils.FileWrite;
 import ru.inovus.jasonxml.utils.FileXMLValidator;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-
+import java.util.List;
 
 
 @Controller
+@RequestMapping(path = "/job-test")
 public class MainController {
 
 
@@ -29,7 +30,7 @@ public class MainController {
     @GetMapping("/index")
     public String indexPage(@ModelAttribute("model") ModelMap model) {
         FileWrite.cleanFile();
-        setModelParam(model,"");
+        setModelParam(model,null);
        return "index";
     }
 
@@ -50,7 +51,7 @@ public class MainController {
         else {
             errWrite("File type not validate");
         }
-        setModelParam(model,FileWrite.textOut());
+        setModelParam(model, FileWrite.textOut());
       return "index";
     }
 
@@ -60,8 +61,8 @@ public class MainController {
         FileWrite.writeErr(errMes);
     }
 
-    private ModelMap setModelParam(ModelMap model, String outText)
+    private ModelMap setModelParam(ModelMap model, List lines)
     {
-       return model.addAttribute("outText", outText);
+       return model.addAttribute("lines", lines);
     }
 }

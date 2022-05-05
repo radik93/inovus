@@ -5,11 +5,14 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
 
-public class FileWriteImpl {
+public class FileWrite {
 
     private static final String fileURL = "out/" + "jsonf" + ".json";
 
@@ -31,7 +34,6 @@ public class FileWriteImpl {
                        e.printStackTrace();
                    }
     }
-
     public static void addEmpty(){
         String emptyText;
         emptyText="                                           "
@@ -73,25 +75,24 @@ public class FileWriteImpl {
         }
     }
 
-    public static String textOut() {
-
+    public static List textOut() {
+        List<String> lines = null;
         if (file.length() < allowableLengthFile) {
             try {
-                BufferedReader reader = new BufferedReader(new FileReader(fileURL));
-                String line = null;
-                StringBuilder stringBuilder = new StringBuilder();
-             //   String ls = System.getProperty("line.separator");
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                 //   stringBuilder.append(ls);
-                }
-                    return stringBuilder.toString();
 
-            } catch (IOException e) {
-                return "Error read file";
+                lines = new ArrayList<>(Files.readAllLines(Paths.get(fileURL)));
+            //  lines.replaceAll(s->s.replace(" ","&nbsp;"));
+                }
+            catch (IOException e) {
+
+                lines.add("Error read file");
+                }
             }
-        }
-            return "File is very large \n " +
-                    "File available for viewing "+file.getAbsolutePath();
+         else {
+            lines.add("File is very large");
+            lines.add("File available for viewing "
+                    + file.getAbsolutePath());
+              }
+       return lines;
     }
 }

@@ -1,103 +1,185 @@
 package ru.inovus.jasonxml.servise;
 
-import org.json.JSONObject;
-import org.json.XML;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.xml.sax.helpers.DefaultHandler;
 import org.xml.sax.Attributes;
 import ru.inovus.jasonxml.utils.FileWrite;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class XMLHandler extends DefaultHandler {
 
-    private StringBuffer partXML;
+    private int pageCount=-1;
 
-    private int pageCount=0;
+    private int count = 0;
 
-    private int count = 1000;
+    private int amountBegin = 0;
 
-    private String firstNode;
+    private int amountEnd = 0;
 
-    private List<String> nodes = new ArrayList<>();
+    private List<String> nodes  = new ArrayList<>();
 
-    private List<String> delNodes = new ArrayList<>();
+    private List<Float> summa   = new ArrayList<>();
 
-    private JSONObject jsonObject;
+    private List<Integer> level = new ArrayList<>();
+
+    private List<Long> topPoss = new ArrayList<>();
 
 
-    private String temp;
+    private boolean readValue=false;
 
-    public XMLHandler(){
-        partXML= new StringBuffer();
-    }
+
+    float temp = 0;
+
+
+    private int lastNode=-1;
+
+
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) {
-
-        pageCount++;
         nodes.add(qName);
-        firstNode=nodes.get(0);
-        partXML.append("<" + qName + ">");
-        for(int i = 0; i < attributes.getLength(); i++)
-            partXML.append("<" + attributes.getQName(i) +
-                    ">"+attributes.getValue(i)+"</" +
-                    attributes.getQName(i) + ">");
+        pageCount++;
+        readValue=true;
+        count=count+2;
+        count++;
+        level.add(count);
+        amountBegin++;
 }
 
     @Override
     public void endElement(String uri, String localName, String qName) {
-        partXML.append("</" + qName + ">");
-        nodes.remove(qName);
-        if(pageCount>count||firstNode.equals(qName))
-        {
-                convertJSON();
+
+        amountEnd++;
+        readValue=false;
+        int index;
+        index=nodes.indexOf(qName);
+
+        addIndents();
+
+        if(count<=level.get(level.size()-1)) {
+            summNodesValue();
+            count--;
         }
+
+        grateText(level.get(level.size()-1),summa.get(index),qName, index,level.size());
+
+        delUsedElem(qName, index);
     }
 
     @Override
     public void characters(char[] chars, int start, int length) {
-       String information = new String(chars, start, length);
-        partXML.append(information);
+        if(readValue)
+        grateListNumber(getNumber(new String(chars, start, length)));
+
     }
 
-    public void convertJSON()  {
 
-        for(int i = nodes.size()-1; i > -1; i--)
-        {
-            partXML.append("</" + nodes.get(i) + ">");
-        }
 
-        jsonObject = XML.toJSONObject(partXML.toString());
 
-        partXML= templatePreparation();
-
-        pageCount=0;
-        delNodes=nodes;
-
-        FileWrite.writeJSONFile(partJSON());
-    }
-
-    private StringBuffer templatePreparation()
+    private Float getNumber(String information)
     {
-        StringBuffer templateXML = new StringBuffer();
-        for(int i = 0; i < nodes.size(); i++)
-        {
-            templateXML.append("<" + nodes.get(i) + ">");
+        float numbers=0;
+
+        information = information.replace("\n", "").trim();
+
+        if (!information.isEmpty()) {
+
+            information = information.replaceAll("\\D+","");
+            try {
+                numbers = Float.parseFloat(information);
+            }
+            catch(NumberFormatException e){
+                numbers=0;
+            }
+
         }
-        return templateXML;
+        return numbers;
     }
 
-    private String partJSON()
+    private void grateListNumber(Float number)
     {
-        temp=jsonObject.toString();
-
-        temp = temp.replace ("{\""+ firstNode +"\":", "");
-        for(int i = 1; i < delNodes.size(); i++)
+        if (lastNode!=pageCount)
         {
-            temp = temp.replace ("{\""+ delNodes.get(i) +"\":", "");
+            summa.add(number);
+            lastNode=pageCount;
         }
+        else
+        {
+            temp=summa.get(pageCount)+number;
+            summa.set(pageCount,temp);
+        }
+    }
+
+    private void summNodesValue()
+    {
+       for (int i=summa.size()-2;i>=0;i--)
+        {
+            summa.set(i,summa.get(i)+summa.get(summa.size()-1));
+        }
+    }
+
+    private void grateText(int lineNumber,float value, String qName, int index, int numberOfSpaces)
+    {
+    if(lineNumber>count)
+    {
+     FileWrite.writeFile(grateJSONformat(qName,
+             value, false,numberOfSpaces)
+             , FileWrite.getSizeFile());
+    }
+    else
+    {
+        FileWrite.writeFile(grateJSONformat(qName,
+                value, true,numberOfSpaces)
+                ,topPoss.get(index));
+        topPoss.remove(index);
+
+                FileWrite.writeFile(grateNumberOfSpaces(numberOfSpaces)+
+                      "}\n",  FileWrite.getSizeFile());
+    }
+
+    }
+
+    private void addIndents()
+    {
+        for(int i=0;i<amountBegin-amountEnd;i++)
+        {
+            topPoss.add(FileWrite.getSizeFile());
+            FileWrite.addEmpty();
+        }
+        amountBegin=0;
+        amountEnd=0;
+    }
+
+    private void delUsedElem(String qName, int index)
+    {
+        if(pageCount==(level.size()-1))
+        {
+            level.remove(pageCount);
+        }
+        nodes.remove(qName);
+        summa.remove(index);
+        pageCount--;
+        lastNode--;
+    }
+
+    private String grateJSONformat(String qName, float value, boolean parentNode, int numberOfSpaces)
+    {
+        String temp;
+        temp=grateNumberOfSpaces(numberOfSpaces)+"\""+qName+"\":{";
+        if(parentNode)
+            temp+="\n"+grateNumberOfSpaces(numberOfSpaces)+"\"value\":\""+value+"\",";
+        else
+            temp+="\"value\":\""+value+"\"},\n";
         return temp;
     }
+
+    private String grateNumberOfSpaces(int numberOfSpaces)
+    {
+        String temp="";
+        for (int i=0;i<numberOfSpaces;i++)
+            temp+="   ";
+            return temp;
+    }
+
+
 }

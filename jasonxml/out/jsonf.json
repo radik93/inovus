@@ -1,0 +1,15 @@
+   "root":{
+   "value":"12.0",                                                         
+      "nodeA":{"value":"1.0"},
+      "nodeB":{
+      "value":"5.0",                                                   
+         "nodeC":{"value":"2.0"},
+         "nodeD":{"value":"3.0"},
+      }
+      "nodeA":{"value":"1.0"},
+      "nodeB":{
+      "value":"5.0",                                                   
+         "nodeC":{"value":"2.0"},
+         "nodeD":{"value":"3.0"},
+      }
+   }
